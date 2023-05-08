@@ -1,0 +1,185 @@
+		
+	
+        
+
+
+        <!DOCTYPE html>
+<html lang="en">
+	<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    
+        <title>Sports Unite</title>
+    
+        <meta itemprop="name" content="Sports Unite">
+        <meta itemprop="description" content="Creative WebGL experiment with Three.js">
+        <!-- <meta itemprop="image" content="https://organic-sphere.vercel.app/social/share-1200x630.png"> -->
+    
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="Sports Unite">
+        <meta name="twitter:description" content="Creative WebGL experiment with Three.js">
+        <meta name="twitter:image" content="https://organic-sphere.vercel.app/social/share-1200x630.png">
+    
+        <meta property="og:site_name" content="Sports Unite">
+        <meta property="og:type" content="website">
+        <!-- <meta property="og:url" content="https://organic-sphere.vercel.app"> -->
+        <meta property="og:title" content="Sports Unite">
+        <meta property="og:description" content="Creative WebGL experiment with Three.js">
+        <!-- <meta property="og:image" content="https://organic-sphere.vercel.app/social/share-1200x630.png"> -->
+    
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+
+        <link type="text/css" rel="stylesheet" href="style.css">
+    </head>
+
+	<body>
+		<div class="experience" id="experience"></div>
+        <div class="credits">
+            Sports Unite by <a href="https://www.linkedin.com/in/pedrohenriquedepaula/" target="_blank">Pedro Henrique de Paula</a> (<a href="https://github.com/PedroHDP84/ball-demo" target="_blank">Source code</a>)
+            <br>Inspired <a href="https://organic-sphere.vercel.app/" target="_blank">Organic Sphere</a> by <a href="https://bruno-simon.com" target="_blank">Bruno Simon</a>
+        </div>
+        <div class="title" contenteditable="" spellcheck="false">
+            Sports Unite
+			<!-- Enjoy the Game -->
+        </div>
+
+		<!-- Import maps polyfill -->
+		<!-- Remove this when import maps will be widely supported -->
+		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+
+		<script type="importmap">
+			{
+                "imports": {
+                  "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+                  "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/"
+                }
+              }
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+			import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+
+			let camera, scene, renderer;
+
+			let pointLight1, pointLight2;
+
+			init();
+			animate();
+
+			function init() {
+
+				const container = document.getElementById( 'experience' );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 20 );
+				camera.position.set( 0, 0, 1.5 );
+
+				scene = new THREE.Scene();
+
+				new RGBELoader()
+					.setPath( 'textures/' )
+					//.load( 'moonless_golf_1k.hdr', function ( texture ) {
+					 .load( 'royal_esplanade_1k.hdr', function ( texture ) {
+
+						texture.mapping = THREE.EquirectangularReflectionMapping;
+
+						scene.environment = texture;
+
+						render();
+
+						// models
+
+						const loader = new GLTFLoader().setPath( 'models/' );
+						
+						loader.load( 'soccer_ball.glb', function ( gltf ) {
+                            
+
+							gltf.scene.position.set( .4, .4, .8 )
+							scene.add( gltf.scene );
+
+
+						} );
+
+						loader.load( 'basketball.glb', function ( gltf ) {
+                            
+							gltf.scene.position.set( -.4, -.4, -.8 )
+							gltf.scene.scale.setScalar(0.4) // scale the baskeball
+							scene.add( gltf.scene );
+
+
+						} );
+
+					} );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 1;
+				container.appendChild( renderer.domElement );
+
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.addEventListener( 'change', render ); // use if there is no animation loop
+				controls.minDistance = 1.3;
+				controls.maxDistance = 1.8;
+				controls.target.set( 0, 0, 0 );
+				controls.update();
+
+				pointLight1 = new THREE.PointLight( 0xff3e00 );
+				pointLight1.position.set( 2, 2, 0 );
+				scene.add( pointLight1 );
+
+				pointLight2 = new THREE.PointLight( 0x0063ff );
+				pointLight2.position.set( -2, -2, 0 );
+				scene.add( pointLight2 );
+
+
+				window.addEventListener( 'resize', onWindowResize );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				render();
+
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+				render();
+			}
+
+			//
+
+			function render() {
+
+				renderer.render( scene, camera );
+
+				const time = Date.now() * 0.005;
+
+				pointLight1.position.x = Math.sin( time * 0.7 ) * 30;
+				pointLight1.position.y = Math.cos( time * 0.5 ) * 40;
+				pointLight1.position.z = Math.cos( time * 0.3 ) * 30;
+
+				pointLight2.position.x = Math.cos( time * 0.3 ) * 30;
+				pointLight2.position.y = Math.sin( time * 0.5 ) * 40;
+				pointLight2.position.z = Math.sin( time * 0.7 ) * 30;
+
+
+			}
+
+		</script>
+
+	</body>
+</html>
